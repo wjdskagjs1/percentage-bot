@@ -25,18 +25,18 @@ client.on('message', msg => {
     }
 
     const value = getRandomInt(0, 100);
-    let msg = '';
+    let res = '';
 
     if(content.endsWith('확률은?')){
-        msg += content.replace('?', '');
-        msg += ' '
-        msg += `${value}% 입니다.`;
+        res += content.replace('?', '');
+        res += ' '
+        res += `${value}% 입니다.`;
     }else{
-        msg += '그 확률은';
-        msg += ' ';
-        msg += `${value}% 입니다.`;
+        res += '그 확률은';
+        res += ' ';
+        res += `${value}% 입니다.`;
     }
-    channel.send(msg);
+    channel.send(res);
     
 });
 
