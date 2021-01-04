@@ -25,7 +25,7 @@ client.on('message', msg => {
         let res = '';
         let replacedContent = content.replace('?', '');
         
-        if(['나', '너', '내', '니'].each( value => replacedContent.includes(value))){
+        if(['나', '너', '내', '니'].some( element => replacedContent.includes(element))){
             res += '그 확률은';
             res += ' ';
             res += `${value}% 입니다.`;
@@ -44,4 +44,4 @@ client.on('message', msg => {
     }
 });
 
-client.login(process.env.TOKEN);
+client.login('Nzk1NTAxNTM2MjE4MTg1NzQ4.X_KSiQ.QEvOHH4fpG3aeSW8_Hqbh4OKhD0');
