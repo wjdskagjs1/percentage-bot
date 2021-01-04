@@ -16,7 +16,7 @@ client.on('ready', () => {
 client.on('message', msg => {
     const {content, channel, author} = msg;
 
-    if(channel.name !== '확률은?' || author.bot ){
+    if(channel.name !== '확률-봇-채널' || author.bot ){
         return;
     }
     if(content.includes('도움말')){
