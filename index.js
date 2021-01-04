@@ -26,9 +26,16 @@ client.on('message', msg => {
 
     const value = getRandomInt(0, 100);
     let res = '';
+    let replacedContent = content.replace('?', '').replace('내가', '당신이').replace('나의', '당신의');
+    ['니가', '너가', '네가'].forEach((element)=>{
+        replacedContent = replacedContent.replace(element, '제가');
+    });
+    ['니의', '너의'].forEach((element)=>{
+        replacedContent = replacedContent.replace(element, '저의');
+    });
 
     if(content.endsWith('확률은?')){
-        res += content.replace('?', '');
+        res += replacedContent;
         res += ' '
         res += `${value}% 입니다.`;
     }else{
