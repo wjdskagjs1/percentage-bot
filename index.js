@@ -19,32 +19,29 @@ client.on('message', msg => {
     if(channel.name !== '확률-봇-채널' || author.bot ){
         return;
     }
+
+    if(content.includes('확률')){
+        const value = getRandomInt(0, 100);
+        let res = '';
+        let replacedContent = content.replace('?', '');
+        
+        if(['나', '너', '내', '니'].each( value => replacedContent.includes(value))){
+            res += '그 확률은';
+            res += ' ';
+            res += `${value}% 입니다.`;
+        }else{
+            res += replacedContent;
+            res += ' '
+            res += `${value}% 입니다.`;
+        }
+        channel.send(res);
+        return;
+    }
+
     if(content.includes('도움말')){
         channel.send("\`\`\`"+article+"\`\`\`");
         return;
     }
-
-    const value = getRandomInt(0, 100);
-    let res = '';
-    let replacedContent = content.replace('?', '').replace('내가', '당신이').replace('나의', '당신의');
-    ['니가', '너가', '네가'].forEach((element)=>{
-        replacedContent = replacedContent.replace(element, '제가');
-    });
-    ['니의', '너의'].forEach((element)=>{
-        replacedContent = replacedContent.replace(element, '저의');
-    });
-
-    if(content.endsWith('확률은?')){
-        res += replacedContent;
-        res += ' '
-        res += `${value}% 입니다.`;
-    }else{
-        res += '그 확률은';
-        res += ' ';
-        res += `${value}% 입니다.`;
-    }
-    channel.send(res);
-    
 });
 
 client.login(process.env.TOKEN);
