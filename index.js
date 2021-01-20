@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 const fs = require('fs');
 const article = fs.readFileSync("README.md").toString();
+const { TOKEN } = require('./config.json');
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -26,25 +27,20 @@ client.on('message', msg => {
 
     const value = getRandomInt(0, 100);
     let res = '';
-    let replacedContent = content.replace('?', '').replace('내가', '당신이').replace('나의', '당신의');
-    ['니가', '너가', '네가'].forEach((element)=>{
-        replacedContent = replacedContent.replace(element, '제가');
-    });
-    ['니의', '너의'].forEach((element)=>{
-        replacedContent = replacedContent.replace(element, '저의');
-    });
+    let replacedContent = content.replace('?', '');
+    if(!replacedContent.includes('확률')) return;
 
-    if(content.endsWith('확률은?')){
-        res += replacedContent;
-        res += ' '
-        res += `${value}% 입니다.`;
-    }else{
+    if(['나', '내', '네', '니', '너'].some(element => content.includes(element))){
         res += '그 확률은';
         res += ' ';
+        res += `${value}% 입니다.`;
+    } else {
+        res += replacedContent;
+        res += ' '
         res += `${value}% 입니다.`;
     }
     channel.send(res);
     
 });
 
-client.login(process.env.TOKEN);
+client.login(TOKEN);

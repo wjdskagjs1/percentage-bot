@@ -1,3 +1,6 @@
+/.vscode
+*.ppk
+config.json
 # Logs
 logs
 *.log
