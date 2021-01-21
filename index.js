@@ -1,8 +1,42 @@
 const Discord = require('discord.js');
-const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+const discordClient = new Discord.Client();
+const {
+    TOKEN,
+    mongouri
+} = require('./config.json');
 const fs = require('fs');
-const article = fs.readFileSync("README.md").toString();
-const { TOKEN } = require('./config.json');
+const article = fs.readFileSync("README.txt").toString();
+
+const mongoose = require('mongoose');
+
+const connectionParams={
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true 
+};
+mongoose.connect(mongouri, connectionParams)
+.then( () => {
+    console.log('Connected to database ');
+})
+.catch( (err) => {
+    console.error(`Error connecting to the database. \n${err}`);
+});
+
+const bot_id = 2;
+const bot_name = '확률 봇';
+
+// 6. Schema 생성. (혹시 스키마에 대한 개념이 없다면, 입력될 데이터의 타입이 정의된 DB 설계도 라고 생각하면 됩니다.)
+var setting = mongoose.Schema({
+    bot_id: Number,
+    ownerID: String,
+    owner_name: String,
+    guild_id: String,
+    guild_name: String,
+    channel: String,
+});
+
+// 7. 정의된 스키마를 객체처럼 사용할 수 있도록 model() 함수로 컴파일
+const Setting = mongoose.model(`bot${bot_id}`, setting);
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -10,37 +44,91 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min; //최댓값은 제외, 최솟값은 포함
 }
 
-client.on('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+discordClient.on('ready', () => {
+    console.log(`Logged in as ${discordClient.user.tag}!`);
 });
 
-client.on('message', msg => {
-    const {content, channel, author} = msg;
+discordClient.on('message', msg => {
+    const { author, member, channel, guild, content } = msg;
+    if(author.bot) return;
 
-    if(channel.name !== '확률-봇-채널' || author.bot ){
-        return;
-    }
-    if(content.includes('도움말')){
+    const admin = member.permissions.has("ADMINISTRATOR");
+
+    const prefix = '%';
+
+    if(content.includes(`${prefix}도움말`)){
         channel.send("\`\`\`"+article+"\`\`\`");
         return;
     }
-
-    const value = getRandomInt(0, 100);
-    let res = '';
-    let replacedContent = content.replace('?', '');
-    if(!replacedContent.includes('확률')) return;
-
-    if(['나', '내', '네', '니', '너'].some(element => content.includes(element))){
-        res += '그 확률은';
-        res += ' ';
-        res += `${value}% 입니다.`;
-    } else {
-        res += replacedContent;
-        res += ' '
-        res += `${value}% 입니다.`;
+    if(content.includes(`${prefix}debugger`)){
+        channel.send('debug : '+admin);
     }
-    channel.send(res);
-    
+
+    Setting.findOne({bot_id: bot_id, guild_id: guild.id}, (err, data)=>{
+        if(err){
+            console.log(err);
+        }else{
+            if(data === null){
+                if(content.startsWith(`${prefix}채널 `) && admin){
+                    const newChannel = content.replace(`${prefix}채널 `, '');
+                    const newSetting = new Setting({
+                        bot_id: bot_id,
+                        ownerID: guild.ownerID || '',
+                        owner_name: guild.owner ? guild.owner.user.tag : '',
+                        guild_id: guild.id,
+                        guild_name: guild.name,
+                        channel: newChannel,
+                    });
+                    newSetting.save(function(error, data){
+                        if(error){
+                            console.log(error);
+                            channel.send("저장 실패.");
+                        }else{
+                            channel.send("저장 완료.");
+                        }
+                    });
+                }
+            }else{
+                if(content.startsWith(`${prefix}채널 `) && admin){
+                    const newChannel = content.replace(`${prefix}채널 `, '');
+                    Setting.updateOne({
+                        bot_id: bot_id,
+                        guild_id: guild.id,
+                    }, { $set: { channel: newChannel } },(err, data)=>{
+                        if(err){
+                            console.log(err);
+                            channel.send("저장 실패.");
+                        }else{
+                            channel.send("저장 완료.");
+                        }
+                    });
+                    return;
+                }
+                const setting_channel = data.channel || '';
+                if(setting_channel === channel.name || setting_channel === '*'){
+                    if(content.includes('확률')){
+                        const value = getRandomInt(0, 100);
+                        let res = '';
+                        let replacedContent = content.replace('?', '');
+                        
+                        if(['나', '너', '내', '니'].some( element => replacedContent.includes(element))){
+                            res += '그 확률은';
+                            res += ' ';
+                            res += `${value}% 입니다.`;
+                        }else{
+                            res += replacedContent;
+                            res += ' '
+                            res += `${value}% 입니다.`;
+                        }
+                        channel.send(res);
+                        return;
+                    }
+                }
+            }
+        }
+    });
 });
 
-client.login(TOKEN);
+discordClient.on("error", () => { console.log("error"); });
+
+discordClient.login(TOKEN);
